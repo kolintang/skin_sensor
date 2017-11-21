@@ -16,7 +16,7 @@ from shutil import copyfile
 ###########################
 
 # Board Settings
-board_start_num = 1
+board_start_num = 3
 num_of_board    = 1
 num_of_tip      = 0
 num_of_axis     = 3
@@ -39,7 +39,7 @@ shift_array = [None] * (num_of_board) * num_of_taxel * num_of_axis
 # Limitation initialisation and settings
 difference      = numpy.zeros((num_of_axis))
 tracking        = numpy.zeros((num_of_board, num_of_taxel, num_of_axis))
-limit_threshold = 0xA0
+limit_threshold = 0x90
 limit_upper     = 0xFA
 limit_lower     = 0x0A
 
@@ -162,13 +162,13 @@ def read_sensor(start_no, end_no, taxel_no):
 def read_sensor_all():
 
     try:
-        #time.sleep(0.001)
+        #time.sleep(0.01)
         for j in range (board_start_num, board_start_num + num_of_board - num_of_tip):
             cmsg_array[j, 0].canWriteByte(cif_array[j, 0], (id_base | j), 2, 7, 0)
             for k in range (0, num_of_taxel):
                 cmsg_array[j,k].canRead(cif_array[j, k])
 
-        #time.sleep(0.001)
+        #time.sleep(0.01)
         if num_of_tip == 1:
             for j in range (5, 6):
                 cmsg_array[j, 0].canWriteByte(cif_array[j, 0], (id_base | j), 2, 7, 0)
@@ -266,7 +266,8 @@ def record_baseline():
 
         csvfile.close()
 
-    copyfile('visualization/LOG1.csv', 'visualization/LOG2.csv')
+    copyfile('visualization/LOG3.csv', 'visualization/LOG1.csv')
+    copyfile('visualization/LOG3.csv', 'visualization/LOG2.csv')
     print('\nFinished')
 
 
@@ -344,14 +345,12 @@ def ros_pickle_send(buffer_in):
 
     pickle_array = pickle.dumps(buffer_in)
     conn.sendall(buffer)
-    time.sleep(0.01)
 
 
 # Send unpickled buffer via TCP for Visulisation
 def visualisation_send(buffer_in):
 
     conn.sendall(buffer_in)
-    time.sleep(0.01)
 
 
 
@@ -383,7 +382,7 @@ if __name__ == '__main__':
             mlx_publish = deepcopy(mlx_buffer)
 
             # Calculate difference between previous and current step reading
-            #mlx_publish = limitation_handler(mlx_previous, mlx_buffer, mlx_publish)
+            mlx_publish = limitation_handler(mlx_previous, mlx_buffer, mlx_publish)
 
             # Preprocess MLX publish buffer into byte and shift buffer
             byte_array = buffer_preprocessor(mlx_publish)
