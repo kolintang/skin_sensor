@@ -245,7 +245,7 @@ def record_baseline():
     # Trigger first 100 readings to avoid 0xFF initalization reading
     for i in range (0, 50):
         read_sensor_all()
-        time.sleep(0.001)
+        time.sleep(0)
 
     print('Recording baseline...')
     # Record for boards of 16 taxel
@@ -256,7 +256,7 @@ def record_baseline():
 
         for i in range (0, 100):
             read_sensor_all()
-            time.sleep(0.001)
+            time.sleep(0)
             mlx_buffer_cache()
             bit_buffer = bit_shift_all(mlx_buffer)
             filewrite.writerow(bit_buffer[j])
@@ -266,8 +266,8 @@ def record_baseline():
 
         csvfile.close()
 
-    copyfile('visualization/LOG3.csv', 'visualization/LOG1.csv')
-    copyfile('visualization/LOG3.csv', 'visualization/LOG2.csv')
+    copyfile('visualization/LOG1.csv', 'visualization/LOG2.csv')
+    #copyfile('visualization/LOG3.csv', 'visualization/LOG2.csv')
     print('\nFinished')
 
 
@@ -294,7 +294,7 @@ def server_init():
 
     return conn
 
-
+# Limitation process to prevent overflow of 16 bit data
 def limitation_handler(previous_buffer, current_buffer, publish_buffer):
 
     for j in range(0, num_of_board):
@@ -318,7 +318,7 @@ def limitation_handler(previous_buffer, current_buffer, publish_buffer):
 
     return publish_buffer
 
-
+# Takes buffer into byte array and shift array
 def buffer_preprocessor(buffer_in):
 
     for j in range(0, num_of_board):
@@ -382,7 +382,7 @@ if __name__ == '__main__':
             mlx_publish = deepcopy(mlx_buffer)
 
             # Calculate difference between previous and current step reading
-            mlx_publish = limitation_handler(mlx_previous, mlx_buffer, mlx_publish)
+            #mlx_publish = limitation_handler(mlx_previous, mlx_buffer, mlx_publish)
 
             # Preprocess MLX publish buffer into byte and shift buffer
             byte_array = buffer_preprocessor(mlx_publish)
