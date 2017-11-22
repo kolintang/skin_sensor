@@ -17,8 +17,8 @@ from shutil import copyfile
 
 # Board Settings
 board_start_num = 1
-num_of_board    = 1
-num_of_tip      = 0
+num_of_board    = 5
+num_of_tip      = 1
 num_of_axis     = 3
 num_of_taxel    = 16
 
@@ -39,7 +39,7 @@ shift_array = [None] * (num_of_board) * num_of_taxel * num_of_axis
 # Limitation initialisation and settings
 difference      = numpy.zeros((num_of_axis))
 tracking        = numpy.zeros((num_of_board, num_of_taxel, num_of_axis))
-limit_threshold = 0xB0
+limit_threshold = 0x80
 limit_upper     = 0xFA
 limit_lower     = 0x0A
 
@@ -162,13 +162,12 @@ def read_sensor(start_no, end_no, taxel_no):
 def read_sensor_all():
 
     try:
-        #time.sleep(0.01)
         for j in range (board_start_num, board_start_num + num_of_board - num_of_tip):
             cmsg_array[j, 0].canWriteByte(cif_array[j, 0], (id_base | j), 2, 7, 0)
             for k in range (0, num_of_taxel):
                 cmsg_array[j,k].canRead(cif_array[j, k])
 
-        #time.sleep(0.01)
+        time.sleep(0.003)
         if num_of_tip == 1:
             for j in range (5, 6):
                 cmsg_array[j, 0].canWriteByte(cif_array[j, 0], (id_base | j), 2, 7, 0)
@@ -245,7 +244,6 @@ def record_baseline():
     # Trigger first 100 readings to avoid 0xFF initalization reading
     for i in range (0, 50):
         read_sensor_all()
-        time.sleep(0)
 
     print('Recording baseline...')
     # Record for boards of 16 taxel
@@ -256,7 +254,7 @@ def record_baseline():
 
         for i in range (0, 100):
             read_sensor_all()
-            time.sleep(0)
+            time.sleep(0.005)
             mlx_buffer_cache()
             bit_buffer = bit_shift_all(mlx_buffer)
             filewrite.writerow(bit_buffer[j])
@@ -266,7 +264,7 @@ def record_baseline():
 
         csvfile.close()
 
-    copyfile('visualization/LOG1.csv', 'visualization/LOG2.csv')
+    #copyfile('visualization/LOG3.csv', 'visualization/LOG1.csv')
     #copyfile('visualization/LOG3.csv', 'visualization/LOG2.csv')
     print('\nFinished')
 
@@ -294,6 +292,7 @@ def server_init():
 
     return conn
 
+
 # Limitation process to prevent overflow of 16 bit data
 def limitation_handler(previous_buffer, current_buffer, publish_buffer):
 
@@ -317,6 +316,7 @@ def limitation_handler(previous_buffer, current_buffer, publish_buffer):
                     publish_buffer[j, k][i*2+1] = limit_lower
 
     return publish_buffer
+
 
 # Takes buffer into byte array and shift array
 def buffer_preprocessor(buffer_in):
@@ -344,7 +344,7 @@ def buffer_preprocessor(buffer_in):
 def ros_pickle_send(buffer_in):
 
     pickle_array = pickle.dumps(buffer_in)
-    conn.sendall(buffer)
+    conn.sendall(buffer_in)
 
 
 # Send unpickled buffer via TCP for Visulisation
@@ -378,11 +378,12 @@ if __name__ == '__main__':
             # Caching previous and new MLX readings
             mlx_previous = deepcopy(mlx_buffer)
             read_sensor_all()
+            time.sleep(0.005)
             mlx_buffer_cache()
             mlx_publish = deepcopy(mlx_buffer)
 
             # Calculate difference between previous and current step reading
-            #mlx_publish = limitation_handler(mlx_previous, mlx_buffer, mlx_publish)
+            mlx_publish = limitation_handler(mlx_previous, mlx_buffer, mlx_publish)
 
             # Preprocess MLX publish buffer into byte and shift buffer
             byte_array = buffer_preprocessor(mlx_publish)
@@ -394,7 +395,7 @@ if __name__ == '__main__':
             #ros_pickle_send(shift_array)
 
             # Write to CSV for debugging
-            csv_debug_write(shift_array)
+            #csv_debug_write(shift_array)
 
     except KeyboardInterrupt:
         print('Stop')
