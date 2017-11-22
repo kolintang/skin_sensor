@@ -271,7 +271,7 @@ def record_baseline():
 
 def server_init():
 
-    raw_input('\nPress Enter to start TCP/IP server...')
+    #raw_input('\nPress Enter to start TCP/IP server...')
 
     # Setup TCP server
     ros = '192.168.11.13'
