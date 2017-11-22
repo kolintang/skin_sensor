@@ -17,8 +17,8 @@ from shutil import copyfile
 
 # Board Settings
 board_start_num = 1
-num_of_board    = 5
-num_of_tip      = 1
+num_of_board    = 1
+num_of_tip      = 0
 num_of_axis     = 3
 num_of_taxel    = 16
 
@@ -265,7 +265,7 @@ def record_baseline():
         csvfile.close()
 
     #copyfile('visualization/LOG3.csv', 'visualization/LOG1.csv')
-    #copyfile('visualization/LOG3.csv', 'visualization/LOG2.csv')
+    copyfile('visualization/LOG1.csv', 'visualization/LOG2.csv')
     print('\nFinished')
 
 
