@@ -16,7 +16,7 @@ from shutil import copyfile
 ###########################
 
 # Board Settings
-board_start_num = 3
+board_start_num = 1
 num_of_board    = 1
 num_of_tip      = 0
 num_of_axis     = 3
@@ -39,7 +39,7 @@ shift_array = [None] * (num_of_board) * num_of_taxel * num_of_axis
 # Limitation initialisation and settings
 difference      = numpy.zeros((num_of_axis))
 tracking        = numpy.zeros((num_of_board, num_of_taxel, num_of_axis))
-limit_threshold = 0x90
+limit_threshold = 0xB0
 limit_upper     = 0xFA
 limit_lower     = 0x0A
 
