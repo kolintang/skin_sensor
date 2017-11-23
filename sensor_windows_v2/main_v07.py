@@ -15,6 +15,11 @@ from shutil import copyfile
 ## Globle Configurations ##
 ###########################
 
+# Server Settings
+raw_data_record = True
+processed_data_record = True
+limitation = True
+
 # Board Settings
 board_start_num = 1
 num_of_board    = 5
@@ -449,17 +454,20 @@ if __name__ == '__main__':
             mlx_publish = deepcopy(mlx_buffer)
 
             # Write raw data to CSV for debugging
-            #byte_array, shift_array = buffer_preprocessor(mlx_buffer)
-            #csv_debug_raw_write(shift_array)
+            if raw_data_record == True:
+                byte_array, shift_array = buffer_preprocessor(mlx_buffer)
+                csv_debug_raw_write(shift_array)
 
             # Calculate difference between previous and current step reading
-            mlx_publish = limitation_handler(mlx_previous, mlx_buffer, mlx_publish)
+            if limitation == True:
+                mlx_publish = limitation_handler(mlx_previous, mlx_buffer, mlx_publish)
 
             # Preprocess MLX publish buffer into byte and shift buffer
             byte_array, shift_array = buffer_preprocessor(mlx_publish)
 
             # Write processed data to CSV for debugging
-            #csv_debug_processed_write(shift_array)
+            if processed_data_record == True:
+                csv_debug_processed_write(shift_array)
 
             # Send unpickled buffer via TCP for Visulisation
             visualisation_send(byte_buffer)

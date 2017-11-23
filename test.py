@@ -1,24 +1,21 @@
+import sys, time, thread, msvcrt
+
+global i
+i = 0
+
+def f():
+    while True:
+        global i
+        raw_input('asdf;kajs;dlkfja;sldkjfa;lksjdf;lka')
+        i = 1
 
 
+thread.start_new_thread(f, ())
 
-mlx_previous = [[[None]*3]*5]*3
-mlx_buffer = [[[None]*3]*5]*3
-difference = [[[None]*3]*5]*3
+while True:
 
-for j in range (0, 3):
-    for k in range (0, 5):
-        for i in range (0, 3):
-            mlx_previous[j][k][i] = 0
-            mlx_buffer[j][k][i] = 0
+    global i
+    print i
+    i = i + 1
+    time.sleep(1)
 
-for j in range (0, 3):
-    for k in range (0, 5):
-        for i in range (0, 3):
-            difference[j][k][i] = mlx_previous[j][k][i] - mlx_buffer[j][k][i]
-            difference[j][k][i] = mlx_previous[j][k][i] - mlx_buffer[j][k][i]
-            difference[j][k][i] = mlx_previous[j][k][i] - mlx_buffer[j][k][i]
-
-
-print (mlx_buffer)
-print (mlx_previous)
-print (difference)

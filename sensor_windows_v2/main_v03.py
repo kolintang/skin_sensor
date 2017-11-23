@@ -19,8 +19,8 @@ import socket
 ### config ###
 num_taxel= 16 #separate taxel and chip, maybe can be useful later
 num_of_chip = 16  #total number of chip per module
-num_of_board = 5
-board_start_num = 1 #MTB Board ID
+num_of_board = 1
+board_start_num = 3 #MTB Board ID
 
 ##############
 ### Create a CSV file ####
@@ -155,6 +155,8 @@ for j in range(0,num_of_board-1):
         filewrite.writerow(label[write_to])
 
     csvfile.close()
+copyfile('visualization/LOG3.csv', 'visualization/LOG1.csv')
+copyfile('visualization/LOG3.csv', 'visualization/LOG2.csv')
 
 ### for 2 SDA
 for j in range(5,6):
