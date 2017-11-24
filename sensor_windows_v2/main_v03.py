@@ -155,8 +155,8 @@ for j in range(0,num_of_board-1):
         filewrite.writerow(label[write_to])
 
     csvfile.close()
-copyfile('visualization/LOG3.csv', 'visualization/LOG1.csv')
-copyfile('visualization/LOG3.csv', 'visualization/LOG2.csv')
+#copyfile('visualization/LOG3.csv', 'visualization/LOG1.csv')
+#copyfile('visualization/LOG3.csv', 'visualization/LOG2.csv')
 
 ### for 2 SDA
 for j in range(5,6):

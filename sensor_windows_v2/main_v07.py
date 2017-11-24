@@ -1,5 +1,5 @@
 # Title : uSkin Server
-# Date  : 2017/11/23
+# Date  : 2017/11/24
 # Author: Shu
 
 
@@ -16,9 +16,9 @@ from shutil import copyfile
 ###########################
 
 # Server Settings
-raw_data_record = True
-processed_data_record = True
 limitation = True
+record_raw = False
+record_post = False
 
 # Board Settings
 board_start_num = 1
@@ -159,7 +159,7 @@ def ntcan_init():
     print('\nSetting up ESD-CAN...')
     print(cif_array[board_start_num, 0])
     print(('Cmsg: %s') % (cmsg_array[board_start_num, 0]))
-    print(('Cmsg lost: %d') % (cmsg_array[board_start_num, 0].msg_lost))
+    print(('Cmsg lost: %d \n') % (cmsg_array[board_start_num, 0].msg_lost))
 
 
 # Generate CAN address
@@ -179,6 +179,11 @@ def can_init():
         for k in range(0, num_of_taxel):
             cif_array[j, k].canIdAdd(can_addr[j - board_start_num][k])
 
+    print('Board start no. = %d ' % (board_start_num))
+    print('Number of board = %d ' % (num_of_board))
+    print('Number of tip   = %d ' % (num_of_tip))
+    print('Number of axis  = %d ' % (num_of_axis))
+    print('Number of taxel = %d ' % (num_of_taxel))
     print('Setup is completed\n')
 
 
@@ -192,7 +197,7 @@ def read_sensor(start_no, end_no, taxel_no):
                 cmsg_array[j,k].canRead(cif_array[j, k])
 
     except IOError, (errno):
-        print "I/O error(%s): " % (errno)
+        print "I/O Error (%s): %s " % (errno, j)
 
 
 # Start burst 16 taxel board (only work with 1 board)
@@ -207,13 +212,14 @@ def start_sensor_all():
                 cmsg_array[j, 0].canWriteByte(cif_array[j, 0], (id_base | j), 2, 7, 0)
 
     except IOError, (errno):
-        print "I/O error(%s): " % (errno)
+        print "I/O Error (%s): %s" % (errno, j)
 
 
 # Read 16 taxel board (with canWriteByte activated reading is limited to 60 hz)
 def read_sensor_all():
 
     try:
+        time.sleep(0.003)
         for j in range (board_start_num, board_start_num + num_of_board - num_of_tip):
             cmsg_array[j, 0].canWriteByte(cif_array[j, 0], (id_base | j), 2, 7, 0)
             for k in range (0, num_of_taxel):
@@ -227,7 +233,7 @@ def read_sensor_all():
                     cmsg_array[j,k].canRead(cif_array[j, k])
 
     except IOError, (errno):
-        print "I/O error(%s): " % (errno)
+        print "I/O Error (%s): %s" % (errno, j)
 
 
 # Transfer all stored CAN message reading into MLX buffer
@@ -293,7 +299,6 @@ def bit_shift_all(buffer_in):
 def record_baseline():
 
     print('Triggering sensor...')
-
     # Trigger first 100 readings to avoid 0xFF initalization reading
     for i in range (0, 100):
         read_sensor_all()
@@ -318,8 +323,16 @@ def record_baseline():
 
         csvfile.close()
 
-    #copyfile('visualization/LOG3.csv', 'visualization/LOG1.csv')
-    #copyfile('visualization/LOG3.csv', 'visualization/LOG2.csv')
+    if (board_start_num == 1 and num_of_board == 1):
+        copyfile('visualization/LOG1.csv', 'visualization/LOG2.csv')
+
+    if (board_start_num == 2 and num_of_board == 1):
+        copyfile('visualization/LOG2.csv', 'visualization/LOG1.csv')
+
+    if (board_start_num == 3 and num_of_board == 1):
+        copyfile('visualization/LOG3.csv', 'visualization/LOG1.csv')
+        copyfile('visualization/LOG3.csv', 'visualization/LOG2.csv')
+
     print('\nFinished')
 
 
@@ -454,7 +467,7 @@ if __name__ == '__main__':
             mlx_publish = deepcopy(mlx_buffer)
 
             # Write raw data to CSV for debugging
-            if raw_data_record == True:
+            if record_raw == True:
                 byte_array, shift_array = buffer_preprocessor(mlx_buffer)
                 csv_debug_raw_write(shift_array)
 
@@ -466,7 +479,7 @@ if __name__ == '__main__':
             byte_array, shift_array = buffer_preprocessor(mlx_publish)
 
             # Write processed data to CSV for debugging
-            if processed_data_record == True:
+            if record_post == True:
                 csv_debug_processed_write(shift_array)
 
             # Send unpickled buffer via TCP for Visulisation

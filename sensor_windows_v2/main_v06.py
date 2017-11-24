@@ -16,8 +16,8 @@ from shutil import copyfile
 ###########################
 
 # Board Settings
-board_start_num = 1
-num_of_board    = 5
+board_start_num = 5
+num_of_board    = 1
 num_of_tip      = 1
 num_of_axis     = 3
 num_of_taxel    = 16
@@ -214,7 +214,7 @@ def read_sensor_all():
             for k in range (0, num_of_taxel):
                 cmsg_array[j,k].canRead(cif_array[j, k])
 
-        time.sleep(0.003)
+        time.sleep(0.005)
         if num_of_tip == 1:
             for j in range (5, 6):
                 cmsg_array[j, 0].canWriteByte(cif_array[j, 0], (id_base | j), 2, 7, 0)
