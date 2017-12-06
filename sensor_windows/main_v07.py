@@ -422,7 +422,7 @@ def reset():
 def ros_pickle_send(buffer_in):
 
     pickle_array = pickle.dumps(buffer_in)
-    conn.sendall(buffer_in)
+    conn.sendall(pickle_array)
 
 
 # Send unpickled buffer via TCP for Visulisation
