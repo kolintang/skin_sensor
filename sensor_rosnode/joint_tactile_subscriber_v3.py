@@ -18,7 +18,7 @@ csv_name = '../datasets/' + object_name + '_' + trial_number + '.csv'
 
 
 # Initialise lists
-patch_number = 5
+patch_number = 4
 taxel_number = 16
 tactile_header = []
 tactile_list = [None]*48*patch_number
