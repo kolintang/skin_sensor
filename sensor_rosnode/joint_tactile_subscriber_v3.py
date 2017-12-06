@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import rospy, csv, time, socket, pickle
+import rospy, csv, time, socket, pickle, numpy
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String, Int32MultiArray
 
@@ -18,11 +18,11 @@ csv_name = '../datasets/' + object_name + '_' + trial_number + '.csv'
 
 
 # Initialise lists
-patch_number = 3
+patch_number = 5
 taxel_number = 16
 tactile_header = []
 tactile_list = [None]*48*patch_number
-joint_list = [None]*16*patch_number 
+joint_list = [None]*16*patch_number
 JT_List = [None]*64*patch_number
 
 
