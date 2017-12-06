@@ -422,7 +422,7 @@ def reset():
 def ros_pickle_send(buffer_in):
 
     pickle_array = pickle.dumps(buffer_in)
-    conn.sendall(pickle_array)
+    conn.sendall(pickle_arra)
 
 
 # Send unpickled buffer via TCP for Visulisation
@@ -481,6 +481,9 @@ if __name__ == '__main__':
             # Write processed data to CSV for debugging
             if record_post == True:
                 csv_debug_processed_write(shift_array)
+
+            # Send pickled buffer via TCP for ROS
+            #ros_pickle_send(shift_array)
 
             # Send unpickled buffer via TCP for Visulisation
             visualisation_send(byte_buffer)

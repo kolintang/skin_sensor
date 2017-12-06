@@ -461,6 +461,9 @@ if __name__ == '__main__':
             # Write processed data to CSV for debugging
             #csv_debug_processed_write(shift_array)
 
+            # Send pickled buffer via TCP for ROS
+            #ros_pickle_send(shift_array)
+
             # Send unpickled buffer via TCP for Visulisation
             visualisation_send(byte_buffer)
 
