@@ -27,7 +27,7 @@
 
 // Inizializzazione bit di configurazione (p30f4013.h)
 _FOSC(CSW_FSCM_OFF & EC_PLL8);                      // Clock switching disabled Fail safe Clock Monitor disabled
-// External clock with PLL x8 (10MHz*8->Fcycle=80/4=20MIPS)
+                                                    // External clock with PLL x8 (10MHz*8->Fcycle=80/4=20MIPS)
 _FWDT(WDT_OFF);                                     // WD disabled
 _FBORPOR(MCLR_EN & PWRT_64 & PBOR_ON & BORV27);     // BOR 2.7V POR 64msec
 _FGS(CODE_PROT_OFF);                                // Code protection disabled
@@ -82,13 +82,11 @@ volatile char flag;
 volatile char flag2;
 
 unsigned int AD7147Registers[16][12];
-unsigned int MLX90393Buffer[4][4][8];
 unsigned int MLX90393Buffer_0[8];
 unsigned int MLX90393Buffer_1[8];
 unsigned int MLX90393Buffer_2[8];
 unsigned int MLX90393Buffer_3[8];
 unsigned int MLX90393Buffer_4[8];
-//unsigned int MLX90393Buffer_previous[4][4][8];
 unsigned int MLX90393Buffer_1_previous[4][8];
 unsigned int MLX90393Buffer_2_previous[4][8];
 unsigned int MLX90393Buffer_3_previous[4][8];
@@ -456,110 +454,9 @@ void FillCanMessages8bit_hall_limited(unsigned char Channel, unsigned int i2c_no
         }
     }
 
-    else if (sda_no == 1) {
-
-        // Transfer MLX buffer to CAN buffer
-        for (ii = 0; ii < 8; ii++) {
-            data[ii] = MLX90393Buffer_2[ii];
-        }
-
-        // Take difference
-        for (ii = 0; ii < 3; ii++) {
-            difference[ii] = (max(MLX90393Buffer_2_previous[i2c_no][ii], MLX90393Buffer_2[ii*2+1]) - min(MLX90393Buffer_2_previous[i2c_no][ii], MLX90393Buffer_2[ii*2+1]));
-
-            // Track handler
-            if (difference[ii] >= limit_threshold) {
-                if (MLX90393Buffer_2_previous[i2c_no][ii] > MLX90393Buffer_2[ii*2+1]) {
-                    track[i2c_no][sda_no][ii]++;
-                }
-
-                else if (MLX90393Buffer_2_previous[i2c_no][ii] < MLX90393Buffer_2[ii*2+1]) {
-                    track[i2c_no][sda_no][ii] = track[i2c_no][sda_no][ii] - 1;
-                }
-            }
-
-            // Limit CAN buffer according to tracking
-            //track[i2c_no][sda_no][0] = -1;
-            //track[i2c_no][sda_no][1] = -1;
-
-            if (track[i2c_no][sda_no][ii] > 0) {
-                data[ii * 2 + 1] = limit_upper;
-            }
-            else if (track[i2c_no][sda_no][ii] < 0) {
-                data[ii * 2 + 1] = limit_lower;
-            }
-        }
-    }
-
-    else if (sda_no == 2) {
-
-        // Transfer MLX buffer to CAN buffer
-        for (ii = 0; ii < 8; ii++) {
-            data[ii] = MLX90393Buffer_3[ii];
-        }
-
-        // Take difference
-        for (ii = 0; ii < 3; ii++) {
-            difference[ii] = (max(MLX90393Buffer_3_previous[i2c_no][ii], MLX90393Buffer_3[ii*2+1]) - min(MLX90393Buffer_3_previous[i2c_no][ii], MLX90393Buffer_3[ii*2+1]));
-
-            // Track handler
-            if (difference[ii] >= limit_threshold) {
-                if (MLX90393Buffer_3_previous[i2c_no][ii] > MLX90393Buffer_3[ii*2+1]) {
-                    track[i2c_no][sda_no][ii]++;
-                }
-
-                else if (MLX90393Buffer_3_previous[i2c_no][ii] < MLX90393Buffer_3[ii*2+1]) {
-                    track[i2c_no][sda_no][ii] = track[i2c_no][sda_no][ii] - 1;
-                }
-            }
-
-            // Limit CAN buffer according to tracking
-            //track[i2c_no][sda_no][0] = -1;
-            //track[i2c_no][sda_no][1] = -1;
-
-            if (track[i2c_no][sda_no][ii] > 0) {
-                data[ii * 2 + 1] = limit_upper;
-            }
-            else if (track[i2c_no][sda_no][ii] < 0) {
-                data[ii * 2 + 1] = limit_lower;
-            }
-        }
-    }
-
-    else if (sda_no == 3) {
-
-        // Transfer MLX buffer to CAN buffer
-        for (ii = 0; ii < 7; ii++) {
-            data[ii] = MLX90393Buffer_4[ii];
-        }
-
-        // Take difference
-        for (ii = 0; ii < 3; ii++) {
-            difference[ii] = (max(MLX90393Buffer_4_previous[i2c_no][ii], MLX90393Buffer_4[ii*2+1]) - min(MLX90393Buffer_4_previous[i2c_no][ii], MLX90393Buffer_4[ii*2+1]));
-
-            // Track handler
-            if (difference[ii] >= limit_threshold) {
-                if (MLX90393Buffer_4_previous[i2c_no][ii] > MLX90393Buffer_4[ii*2+1]) {
-                    track[i2c_no][sda_no][ii]++;
-                }
-
-                else if (MLX90393Buffer_4_previous[i2c_no][ii] < MLX90393Buffer_4[ii*2+1]) {
-                    track[i2c_no][sda_no][ii] = track[i2c_no][sda_no][ii] - 1;
-                }
-            }
-
-            // Limit CAN buffer according to tracking
-            //track[i2c_no][sda_no][0] = -1;
-            //track[i2c_no][sda_no][1] = -1;
-
-            if (track[i2c_no][sda_no][ii] > 0) {
-                data[ii * 2 + 1] = limit_upper;
-            }
-            else if (track[i2c_no][sda_no][ii] < 0) {
-                data[ii * 2 + 1] = limit_lower;
-            }
-        }
-    }
+    else if (sda_no == 1) {}
+    else if (sda_no == 2) {}
+    else if (sda_no == 3) {}
 
     CAN1_send(PMsgID, 1, 8, data);
 }
@@ -646,13 +543,13 @@ void MLX90393_calibration(unsigned char i2c_address) {
     //unsigned int offset_data_array[3][16] = {
     //    {0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
     //    {0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
-    //    {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90} };
+    //    {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90}};
 
     // MTB3 Taxel Settings
     unsigned int offset_data_array[3][16] = {
         {0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
         {0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
-        {0xA0, 0x90, 0x98, 0x98, 0xC8, 0xA0, 0x68, 0xB8, 0xD0, 0xA8, 0xA8, 0x98, 0xA8, 0xA8, 0x60, 0xA8} };
+        {0xA0, 0x90, 0x98, 0x98, 0xC8, 0xA0, 0x68, 0xB8, 0xD0, 0xA8, 0xA8, 0x98, 0xA8, 0xA8, 0x60, 0xA8}};
     //     0     4     8     12    1     5     9     13    2     6     10    14    3     7     11    15
 
     // Fabric Settings

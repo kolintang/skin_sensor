@@ -16,8 +16,8 @@ from shutil import copyfile
 ###########################
 
 # Board Settings
-board_start_num = 5
-num_of_board    = 1
+board_start_num = 1
+num_of_board    = 5
 num_of_tip      = 1
 num_of_axis     = 3
 num_of_taxel    = 16
@@ -56,8 +56,8 @@ def csv_log_init():
     for i in range(num_of_board):
         del_num = board_start_num + i
 
-        if os.path.exists('visualization/LOG%s.csv' % del_num):
-            os.remove('visualization/LOG%s.csv' % del_num)
+        if os.path.exists('LOG%s.csv' % del_num):
+            os.remove('LOG%s.csv' % del_num)
 
 
 # Create sensor debug logs and its header row
@@ -314,8 +314,8 @@ def record_baseline():
         csvfile.close()
 
     #copyfile('visualization/LOG3.csv', 'visualization/LOG1.csv')
-    #copyfile('visualization/LOG3.csv', 'visualization/LOG2.csv')
-    print('\nFinished')
+    #copyfile('visualization/LOG1.csv', 'visualization/LOG2.csv')
+    print('\nFin#ished')
 
 
 def server_init():

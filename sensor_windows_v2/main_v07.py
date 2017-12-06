@@ -22,8 +22,8 @@ record_post = False
 
 # Board Settings
 board_start_num = 1
-num_of_board    = 5
-num_of_tip      = 1
+num_of_board    = 1
+num_of_tip      = 0
 num_of_axis     = 3
 num_of_taxel    = 16
 
