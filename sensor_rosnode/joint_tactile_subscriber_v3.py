@@ -5,7 +5,7 @@ from std_msgs.msg import String, Int32MultiArray
 
 
 # Setup TCP server
-TCP_IP = '192.168.11.11'
+TCP_IP = '192.168.11.36'
 TCP_PORT = 5080
 BUFFER_SIZE = 8192
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -18,7 +18,7 @@ csv_name = '../datasets/' + object_name + '_' + trial_number + '.csv'
 
 
 # Initialise lists
-patch_number = 4
+patch_number = 5
 taxel_number = 16
 tactile_header = []
 tactile_list = [None]*48*patch_number
