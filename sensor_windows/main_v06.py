@@ -43,6 +43,14 @@ limit_threshold = 0xA0
 limit_upper     = 0xFA
 limit_lower     = 0x0A
 
+# Setup TCP server
+ogasa = '192.168.11.13'
+proxy = '192.168.11.36'
+local = '127.0.0.1'
+TCP_IP = proxy
+TCP_PORT = 5007
+BUFFER_SIZE = 20
+
 
 
 ##########################
@@ -322,12 +330,6 @@ def server_init():
 
     raw_input('\nPress Enter to start TCP/IP server...')
 
-    # Setup TCP server ros = '192.168.11.13'
-    local = '127.0.0.1'
-    TCP_IP = local
-    TCP_PORT = 5007
-    BUFFER_SIZE = 20
-
     # Start TCP server & wait for connection
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((TCP_IP, TCP_PORT))
@@ -404,7 +406,7 @@ def reset():
 def ros_pickle_send(buffer_in):
 
     pickle_array = pickle.dumps(buffer_in)
-    conn.sendall(buffer_in)
+    conn.sendall(pickle_array)
 
 
 # Send unpickled buffer via TCP for Visulisation
