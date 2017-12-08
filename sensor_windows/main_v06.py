@@ -49,7 +49,7 @@ proxy = '192.168.11.36'
 local = '127.0.0.1'
 TCP_IP = proxy
 TCP_PORT = 5007
-BUFFER_SIZE = 20
+BUFFER_SIZE = 8192
 
 
 
@@ -328,7 +328,7 @@ def record_baseline():
 
 def server_init():
 
-    raw_input('\nPress Enter to start TCP/IP server...')
+    #raw_input('\nPress Enter to start TCP/IP server...')
 
     # Start TCP server & wait for connection
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -359,7 +359,7 @@ def limitation_handler(previous_buffer, current_buffer, publish_buffer):
                 elif difference[i] <= limit_threshold * (-1):
                     tracking[j][k][i] -= 1
 
-            # Limit the MXL buffer depending on tracking record
+                # Limit the MXL buffer depending on tracking record
                 if tracking[j][k][i] > 0:
                     publish_buffer[j, k][i*2+1] = limit_upper
                 elif tracking[j][k][i] < 0:
@@ -430,7 +430,7 @@ if __name__ == '__main__':
     can_init()
 
     #start_sensor_all()
-    record_baseline()
+    #record_baseline()
     conn = server_init()
     thread.start_new_thread(reset, ())
 
@@ -464,10 +464,10 @@ if __name__ == '__main__':
             #csv_debug_processed_write(shift_array)
 
             # Send pickled buffer via TCP for ROS
-            #ros_pickle_send(shift_array)
+            ros_pickle_send(shift_array)
 
             # Send unpickled buffer via TCP for Visulisation
-            visualisation_send(byte_buffer)
+            #visualisation_send(byte_buffer)
 
 
     except KeyboardInterrupt:
