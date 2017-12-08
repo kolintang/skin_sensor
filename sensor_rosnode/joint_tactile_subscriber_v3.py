@@ -29,10 +29,6 @@ JT_List = [None]*64*patch_number
 
 def csv_init():
 
-    # Remove previous record if any exists
-    if os.path.exists(csv_name):
-                    os.remove(csv_name)
-
     # Initialising taxel number header
     for i in range (patch_number):
         for j in range (taxel_number):
@@ -51,24 +47,32 @@ def csv_init():
         writer.writerow(tactile_header)
 
 
+def csv_rm():
+
+    # Remove previous record if any exists
+    if os.path.exists(csv_name):
+                    os.remove(csv_name)
+
+
 def callback_node_state(state):
+
     global node_state
     node_state = state.data
 
 
 def callback_joint(joint):
+
     global joint_list
     global node_state
 
     if node_state == 1:
-
         # Write to new csv
-        csv_init()
         joint_list = joint.position
         write_csv()
 
 
 def callback_tactile():
+
     global tactile_list
     print ("received data: %s \n" % (tactile_list))
 
@@ -111,13 +115,19 @@ def listener():
     s.connect((TCP_IP, TCP_PORT))
     print('Connected to server')
 
-    while True:
-        global tactile_list
-        data = s.recv(BUFFER_SIZE)
-        if not data: break
-        tactile_list = pickle.loads(data)
-        callback_tactile()
+    try:
+        while True:
+            global tactile_list
+            data = s.recv(BUFFER_SIZE)
+            if not data: break
+            tactile_list = pickle.loads(data)
+            callback_tactile()
 
+    except KeyboardInterrupt:
+       print('Stop')
+       conn.close()
+       sys.exit(1)
 
 if __name__ == '__main__':
+    csv_init()
     listener()

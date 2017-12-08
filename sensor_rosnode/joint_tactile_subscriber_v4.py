@@ -77,7 +77,7 @@ def callback_tactile_3(tactile):
 
 def write_csv():
 
-    if None in joint_list or None in tactile_list_0 
+    if None in joint_list or None in tactile_list_0
     or None in tactile_list_1 or None in tactile_list_2 or None in tactile_list_3:
         pass
 
@@ -92,7 +92,10 @@ def write_csv():
             writer.writerow(JT_List)
 
         # Reinitialising Buffer
-        tactile_list = [None]*48*patch_number
+        tactile_list_0 = [None]*48*patch_number
+        tactile_list_1 = [None]*48*patch_number
+        tactile_list_2 = [None]*48*patch_number
+        tactile_list_3 = [None]*48*patch_number
         joint_list = [None]*16*patch_number 
 
 
@@ -105,6 +108,7 @@ def listener():
     rospy.Subscriber('tactile_reading_finger_3', Int32MultiArray, callback_tactile_3)
     rospy.spin()
 
-if __name__ == '__main__':
+
+if __name__== '__main__':
     csv_init()
     listener()
