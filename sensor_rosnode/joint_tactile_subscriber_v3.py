@@ -1,23 +1,24 @@
 #!/usr/bin/env python
-import rospy, csv, time, socket, pickle, numpy
+import os, rospy, csv, time, socket, pickle, numpy
 from sensor_msgs.msg import JointState
-from std_msgs.msg import String, Int32MultiArray
+from std_msgs.msg import String, Int32MultiArray, Int32
 
 
 # Setup TCP server
 TCP_IP = '192.168.11.36'
-TCP_PORT = 5080
+TCP_PORT = 5007
 BUFFER_SIZE = 8192
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 # Initialise csv path and dataset name
-object_name = 'test'
+object_name = 'pencilcase'
 trial_number = '00'
 csv_name = '../datasets/' + object_name + '_' + trial_number + '.csv'
 
 
 # Initialise lists
+node_state = 0
 patch_number = 5
 taxel_number = 16
 tactile_header = []
@@ -27,6 +28,11 @@ JT_List = [None]*64*patch_number
 
 
 def csv_init():
+
+    # Remove previous record if any exists
+    if os.path.exists(csv_name):
+                    os.remove(csv_name)
+
     # Initialising taxel number header
     for i in range (patch_number):
         for j in range (taxel_number):
@@ -45,20 +51,30 @@ def csv_init():
         writer.writerow(tactile_header)
 
 
+def callback_node_state(state):
+    global node_state
+    node_state = state.data
+
+
 def callback_joint(joint):
     global joint_list
-    joint_list = joint.position
-    write_csv()
+    global node_state
+
+    if node_state == 1:
+
+        # Write to new csv
+        csv_init()
+        joint_list = joint.position
+        write_csv()
 
 
 def callback_tactile():
     global tactile_list
     print ("received data: %s \n" % (tactile_list))
-    rospy.Subscriber('allegroHand_0/joint_states', JointState, callback_joint)
 
 
 def write_csv():
-    
+
     global patch_number
     global tactile_list
     global joint_list
@@ -69,9 +85,9 @@ def write_csv():
         pass
 
     else:
-        print ('Fully updated.. publishing\n')
+        #print ('Fully updated.. publishing\n')
         JT_List = list(tactile_list) + list(joint_list)
-        
+
         # Write to CSV at once
         with open(csv_name, 'a') as csvfile:
             writer = csv.writer(csvfile, lineterminator='\n')
@@ -83,9 +99,17 @@ def write_csv():
 
 
 def listener():
+
+    # Subscribe to ROS topics
     rospy.init_node('joint_tactile_subscriber', anonymous=True)
+    rospy.Subscriber('allegroHand/node_states', Int32, callback_node_state)
+    rospy.Subscriber('allegroHand_0/joint_states', JointState, callback_joint)
     time.sleep(0.1)
+
+    # Connecting to server
+    print('Connecting to server')
     s.connect((TCP_IP, TCP_PORT))
+    print('Connected to server')
 
     while True:
         global tactile_list
@@ -96,5 +120,4 @@ def listener():
 
 
 if __name__ == '__main__':
-    csv_init()
     listener()
