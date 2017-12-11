@@ -71,12 +71,6 @@ def callback_joint(joint):
         write_csv()
 
 
-def callback_tactile():
-
-    global tactile_list
-    print ("received data: %s \n" % (tactile_list))
-
-
 def write_csv():
 
     global patch_number
@@ -111,9 +105,9 @@ def listener():
     time.sleep(0.1)
 
     # Connecting to server
-    print('Connecting to server')
+    print('Connecting to server..')
     s.connect((TCP_IP, TCP_PORT))
-    print('Connected to server')
+    print('Connected to server!')
 
     try:
         while True:
@@ -121,7 +115,7 @@ def listener():
             data = s.recv(BUFFER_SIZE)
             if not data: break
             tactile_list = pickle.loads(data)
-            callback_tactile()
+            print ("received data: %s \n" % (tactile_list))
 
     except KeyboardInterrupt:
        print('Stop')
