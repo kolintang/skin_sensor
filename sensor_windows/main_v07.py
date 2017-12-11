@@ -19,6 +19,7 @@ from shutil import copyfile
 limitation = True
 record_raw = False
 record_post = False
+record_base = False
 
 # Board Settings
 board_start_num = 1
@@ -53,7 +54,7 @@ ogasa = '192.168.11.13'
 proxy = '192.168.11.36'
 local = '127.0.0.1'
 TCP_IP = proxy
-TCP_PORT = 5080
+TCP_PORT = 5007
 BUFFER_SIZE = 8192
 
 
@@ -345,7 +346,7 @@ def record_baseline():
 
 def server_init():
 
-    raw_input('\nPress Enter to start TCP/IP server...')
+    #raw_input('\nPress Enter to start TCP/IP server...')
 
     # Start TCP server & wait for connection
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -447,7 +448,8 @@ if __name__ == '__main__':
     can_init()
 
     #start_sensor_all()
-    record_baseline()
+    if record_base == True:
+        record_baseline()
     conn = server_init()
     thread.start_new_thread(reset, ())
 
