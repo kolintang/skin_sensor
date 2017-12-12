@@ -26,7 +26,7 @@ def publisher():
         data = s.recv(BUFFER_SIZE)
         if not data: break
         tactile_list.data = pickle.loads(data)
-        print ("%s \n" % (tactile_list))
+        #print ("%s \n" % (tactile_list))
         pub.publish(tactile_list)
 
 
