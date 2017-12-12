@@ -482,7 +482,6 @@ if __name__ == '__main__':
 
             # Preprocess MLX publish buffer into byte and shift buffer
             byte_array, shift_array = buffer_preprocessor(mlx_publish)
-            print('Shift Array: %s \n' % (shift_array))
 
             # Write processed data to CSV for debugging
             if record_post == True:

@@ -44,8 +44,10 @@ enum Errors
 /////////////////////////
 
 void Wait(unsigned int value);
+unsigned int max(unsigned int a, unsigned int b);
+unsigned int min(unsigned int a, unsigned int b);
 void FillCanMessages8bit_hall(unsigned char Channel, unsigned char sda_no);
-void FillCanMessages8bit_hall_limited(unsigned char Channel, unsigned char sda_no, unsigned int colum);
+void FillCanMessages8bit_hall_limited(unsigned char Channel, unsigned int i2c_no, unsigned char sda_no);
 void MLX90393_init(unsigned char i2c_address);
 void MLX90393_calibration(unsigned char i2c_address);
 void __attribute__((interrupt, no_auto_psv)) _C1Interrupt(void);
@@ -93,7 +95,7 @@ unsigned int MLX90393Buffer_3_previous[4][8];
 unsigned int MLX90393Buffer_4_previous[4][8];
 
 int track[4][4][3];
-int difference[4][3];
+int difference[3];
 int write_buffer[4];
 int write_buffer_single[4];
 
@@ -113,6 +115,7 @@ unsigned char new_board_MODE = EIGHT_BITS;
 char _additional_info[32] = { 'T','a','c','t','i','l','e',' ','S','e','n','s','o','r' };
 unsigned int PW_CONTROL = 0x0B0;                // 0x1B0 for 128 decim  
 unsigned int TIMER_VALUE = TIMER_10ms;          // Timer duration 0x3000=> 40ms  //For controlling the loop timer as defined in options.h; currently the delay is 10ms
+//unsigned int TIMER_VALUE = TIMER_8ms;          // Timer duration 0x3000=> 40ms  //For controlling the loop timer as defined in options.h; currently the delay is 10ms
 unsigned int TIMER_VALUE2 = 0xC00;              // 0x132; -> 50ms? //0xc00;//0x99;//1ms 0xc00;//0xC00; // Timer duration 0xC00=> 10ms
 unsigned char SHIFT = 2;                        // Shift of the CDC value for removing the noise
 unsigned char SHIFT_THREE = 3;                  // Shift of the CDC value for removing the noise
@@ -245,13 +248,26 @@ int main(void)
         for (j = 0; j < 4; j++) {
             for (k = 0; k < 3; k++) {
                 track[i][j][k] = 0;
-                difference[j][k] = 0;
+                difference[k] = 0;
             }
         }
     }
 
     // Feed initial reading into previous buffer
     for (i = 0; i < 4; i++) {
+        chip_id = i;
+        SendViaI2C_MLX(CH0, MLX90393_ADD[i], RM, 1, MLX90393Buffer_1, MLX90393Buffer_2, MLX90393Buffer_3, MLX90393Buffer_4, 7);
+
+        // Save previous time-step buffer
+        for (k = 0; k < 8; k++) {
+            MLX90393Buffer_1_previous[i][k] = MLX90393Buffer_1[k];
+            MLX90393Buffer_2_previous[i][k] = MLX90393Buffer_2[k];
+            MLX90393Buffer_3_previous[i][k] = MLX90393Buffer_3[k];
+            MLX90393Buffer_4_previous[i][k] = MLX90393Buffer_4[k];
+        }
+    }
+
+    for (i = 0; i < 1; i++) {
         chip_id = i;
         SendViaI2C_MLX(CH0, MLX90393_ADD[i], RM, 1, MLX90393Buffer_1, MLX90393Buffer_2, MLX90393Buffer_3, MLX90393Buffer_4, 7);
 
@@ -318,7 +334,7 @@ int main(void)
                 // Fill the CAN with measurement data
                 for (j = 0; j < 4; j++) {
                     FillCanMessages8bit_hall(CH0, j);
-                    //FillCanMessages8bit_hall_limited(CH0, j, i);
+                    //FillCanMessages8bit_hall_limited(CH0, i, j);
                 }
             }
 
@@ -339,6 +355,16 @@ void Wait(unsigned int value)
     while (value > 0) {
         value--;
     }
+}
+
+
+unsigned int max(unsigned int a, unsigned int b) {
+    return (a > b) ? a : b;
+}
+
+
+unsigned int min(unsigned int a, unsigned int b) {
+    return (a < b) ? a : b;
 }
 
 
@@ -384,76 +410,147 @@ void FillCanMessages8bit_hall(unsigned char Channel, unsigned char sda_no)
 }
 
 
-void FillCanMessages8bit_hall_limited(unsigned char Channel, unsigned char sda_no, unsigned int colum)
+void FillCanMessages8bit_hall_limited(unsigned char Channel, unsigned int i2c_no, unsigned char sda_no)
 {
+    // Z-axis has a range of 45000 = AF
     int limit_threshold = 0xB0;
     int limit_upper = 0xFA;
     int limit_lower = 0x0A;
-    unsigned char data[8];
-    unsigned int i, ii;
+    unsigned char data[8] = {0,0,0,0,0,0,0,0};
+    unsigned int ii;
 
     PMsgID = 0x700;
     PMsgID |= (chip_id | sda_no << 2 | BoardConfig.EE_CAN_BoardAddress << 4);
 
     if (sda_no == 0) {
 
-        difference[sda_no][0] = MLX90393Buffer_1_previous[colum][1] - MLX90393Buffer_1[1];
-        difference[sda_no][1] = MLX90393Buffer_1_previous[colum][3] - MLX90393Buffer_1[3];
-        difference[sda_no][2] = MLX90393Buffer_1_previous[colum][5] - MLX90393Buffer_1[5];
-
-        // Track handler
-        for (ii = 0; ii < 3; ii++) {
-            if (difference[sda_no][ii] >= limit_threshold) {
-                track[colum][sda_no][ii]++;
-            }
-            else if (difference[sda_no][ii] <= limit_threshold * (-1)) {
-                track[colum][sda_no][ii]--;
-            }
-        }
-
         // Transfer MLX buffer to CAN buffer
-        for (ii = 0; ii < 7; ii++) {
+        for (ii = 0; ii < 8; ii++) {
             data[ii] = MLX90393Buffer_1[ii];
         }
 
-        // Limit CAN buffer according to tracking
+        // Take difference
         for (ii = 0; ii < 3; ii++) {
-            track[colum][sda_no][0] = -1;
-            track[colum][sda_no][1] = -1;
-            if (track[colum][sda_no][ii] > 0) {
-                data[ii * 2 + 1] = limit_upper;
+            difference[ii] = (max(MLX90393Buffer_1_previous[i2c_no][ii], MLX90393Buffer_1[ii*2+1]) - min(MLX90393Buffer_1_previous[i2c_no][ii], MLX90393Buffer_1[ii*2+1]));
+
+            // Track handler
+            if (difference[ii] >= limit_threshold) {
+                if (MLX90393Buffer_1_previous[i2c_no][ii] > MLX90393Buffer_1[ii*2+1]) {
+                    track[i2c_no][sda_no][ii]++;
+                }
+
+                else if (MLX90393Buffer_1_previous[i2c_no][ii] < MLX90393Buffer_1[ii*2+1]) {
+                    track[i2c_no][sda_no][ii] = track[i2c_no][sda_no][ii] - 1;
+                }
             }
-            else if (track[colum][sda_no][ii] < 0) {
-                data[ii * 2 + 1] = limit_lower;
+
+            // Limit CAN buffer according to tracking
+            if (track[i2c_no][sda_no][ii] > 0) {
+                data[ii*2+1] = limit_upper;
+            }
+            else if (track[i2c_no][sda_no][ii] < 0) {
+                data[ii*2+1] = limit_lower;
             }
         }
-
-        // Can be used for storing ID or temperature
-        data[7] = sda_no + 1;
     }
 
     else if (sda_no == 1) {
-        for (i = 0; i < 7; i++) {
-            data[i] = MLX90393Buffer_2[i];
+
+        // Transfer MLX buffer to CAN buffer
+        for (ii = 0; ii < 8; ii++) {
+            data[ii] = MLX90393Buffer_2[ii];
         }
-        data[7] = sda_no + 1;
+
+        // Take difference
+        for (ii = 0; ii < 3; ii++) {
+            difference[ii] = (max(MLX90393Buffer_2_previous[i2c_no][ii], MLX90393Buffer_2[ii*2+1]) - min(MLX90393Buffer_2_previous[i2c_no][ii], MLX90393Buffer_2[ii*2+1]));
+
+            // Track handler
+            if (difference[ii] >= limit_threshold) {
+                if (MLX90393Buffer_2_previous[i2c_no][ii] > MLX90393Buffer_2[ii*2+1]) {
+                    track[i2c_no][sda_no][ii]++;
+                }
+
+                else if (MLX90393Buffer_2_previous[i2c_no][ii] < MLX90393Buffer_2[ii*2+1]) {
+                    track[i2c_no][sda_no][ii] = track[i2c_no][sda_no][ii] - 1;
+                }
+            }
+
+            // Limit CAN buffer according to tracking
+            if (track[i2c_no][sda_no][ii] > 0) {
+                data[ii * 2 + 1] = limit_upper;
+            }
+            else if (track[i2c_no][sda_no][ii] < 0) {
+                data[ii * 2 + 1] = limit_lower;
+            }
+        }
     }
 
     else if (sda_no == 2) {
-        for (i = 0; i < 7; i++) {
-            data[i] = MLX90393Buffer_3[i];
+
+        // Transfer MLX buffer to CAN buffer
+        for (ii = 0; ii < 8; ii++) {
+            data[ii] = MLX90393Buffer_3[ii];
         }
-        data[7] = sda_no + 1;
+
+        // Take difference
+        for (ii = 0; ii < 3; ii++) {
+            difference[ii] = (max(MLX90393Buffer_3_previous[i2c_no][ii], MLX90393Buffer_3[ii*2+1]) - min(MLX90393Buffer_3_previous[i2c_no][ii], MLX90393Buffer_3[ii*2+1]));
+
+            // Track handler
+            if (difference[ii] >= limit_threshold) {
+                if (MLX90393Buffer_3_previous[i2c_no][ii] > MLX90393Buffer_3[ii*2+1]) {
+                    track[i2c_no][sda_no][ii]++;
+                }
+
+                else if (MLX90393Buffer_3_previous[i2c_no][ii] < MLX90393Buffer_3[ii*2+1]) {
+                    track[i2c_no][sda_no][ii] = track[i2c_no][sda_no][ii] - 1;
+                }
+            }
+
+            // Limit CAN buffer according to tracking
+            if (track[i2c_no][sda_no][ii] > 0) {
+                data[ii * 2 + 1] = limit_upper;
+            }
+            else if (track[i2c_no][sda_no][ii] < 0) {
+                data[ii * 2 + 1] = limit_lower;
+            }
+        }
     }
 
     else if (sda_no == 3) {
-        for (i = 0; i < 7; i++) {
-            data[i] = MLX90393Buffer_4[i];
-        }
-        data[7] = sda_no + 1;
-    }
-    CAN1_send(PMsgID, 1, 8, data);
 
+        // Transfer MLX buffer to CAN buffer
+        for (ii = 0; ii < 7; ii++) {
+            data[ii] = MLX90393Buffer_4[ii];
+        }
+
+        // Take difference
+        for (ii = 0; ii < 3; ii++) {
+            difference[ii] = (max(MLX90393Buffer_4_previous[i2c_no][ii], MLX90393Buffer_4[ii*2+1]) - min(MLX90393Buffer_4_previous[i2c_no][ii], MLX90393Buffer_4[ii*2+1]));
+
+            // Track handler
+            if (difference[ii] >= limit_threshold) {
+                if (MLX90393Buffer_4_previous[i2c_no][ii] > MLX90393Buffer_4[ii*2+1]) {
+                    track[i2c_no][sda_no][ii]++;
+                }
+
+                else if (MLX90393Buffer_4_previous[i2c_no][ii] < MLX90393Buffer_4[ii*2+1]) {
+                    track[i2c_no][sda_no][ii] = track[i2c_no][sda_no][ii] - 1;
+                }
+            }
+
+            // Limit CAN buffer according to tracking
+            if (track[i2c_no][sda_no][ii] > 0) {
+                data[ii * 2 + 1] = limit_upper;
+            }
+            else if (track[i2c_no][sda_no][ii] < 0) {
+                data[ii * 2 + 1] = limit_lower;
+            }
+        }
+    }
+
+    CAN1_send(PMsgID, 1, 8, data);
 }
 
 
@@ -466,8 +563,9 @@ void MLX90393_init(unsigned char i2c_address)
 
     // Configure address 0
     unsigned int Z_SERIES = 0x00 << 7;      // 0: Default and recommended. 1: Enable all plates for Z-measurement
-    unsigned int GAIN_SEL = 0x07 << 4;      // 0x07 is the highest response for the new skin // 0x00 is the lowest response// for old skin:
-    unsigned int GAIN_SEL_ARRAY[16] = { 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07 };
+    unsigned int GAIN_SEL = 0x07 << 4;      // 0x07 is the highest response for the new skin // 0x00 is the lowest response for old skin:
+    unsigned int GAIN_SEL_ARRAY[16] = { 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04 };
+    //     0     4     8     12    1     5     9     13    2     6     10    14    3     7     11    15
     unsigned int HALLCONF = 0x0C;           // Default configuration but does not allow the OSR & DIG_FILT to be 00, 01, or 11 (faster rate). We will use DIG_FILT 5 anyway
 
     // Configure address 1
@@ -529,95 +627,33 @@ void MLX90393_init(unsigned char i2c_address)
 void MLX90393_calibration(unsigned char i2c_address) {
 
     unsigned int i, j;
-    unsigned int offset_data[7];
+    unsigned int offset_data[3];
     unsigned int target_value[3] = { 0x80, 0x80, 0x0C };
     unsigned int DataToWrite;
     unsigned int DataToWrite_array;
 
-    SendViaI2C_MLX(CH0, i2c_address, EX, 1, MLX90393Buffer_1, MLX90393Buffer_2, MLX90393Buffer_3, MLX90393Buffer_4, 1);
-
-    // Foil Settings
+    // Initial Offests Example = {{X}, {Y}, {Z}}
     //unsigned int offset_data_array[3][16] = {
     //    {0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
     //    {0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
-    //    {0xE0, 0xE0, 0xE0, 0xE0, 0xE0, 0xE0, 0xE0, 0xE0, 0xE0, 0xE0, 0xE0, 0xE0, 0xE0, 0xE0, 0xE0, 0xE0}};
+    //    {0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50}};
+    //Order: 0     4     8     12    1     5     9     13    2     6     10    14    3     7     11    15
 
-    // One Taxel Settings
+    // Index Finger - MTB4 Taxel Settings = {{X}, {Y}, {Z}}
     unsigned int offset_data_array[3][16] = {
-        {0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
-        {0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
-        {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90} };
+        {0x85, 0x85, 0x87, 0x81, 0x87, 0x86, 0x84, 0x8F, 0x87, 0xC0, 0x82, 0x89, 0x8C, 0x7E, 0x92, 0x9A},
+        {0x80, 0x86, 0x7D, 0x85, 0x75, 0xA9, 0x7F, 0x83, 0x7D, 0x8A, 0x82, 0x90, 0x6B, 0x82, 0x92, 0x96},
+        {0x9D, 0x73, 0x86, 0x7D, 0xA8, 0x3E, 0x94, 0x71, 0xA8, 0xCC, 0xA3, 0x61, 0x8D, 0x50, 0x76, 0x4D}};
 
-    // Fabric Settings
-    //unsigned int offset_data_array[3][16] = {
-    //    {0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
-    //    {0x60, 0x60, 0x60, 0x60, 0x60, 0x60, 0x60, 0x60, 0x60, 0x60, 0x60, 0x60, 0x60, 0x60, 0x60, 0x60},
-    //    {0x70, 0x70, 0x70, 0x70, 0x70, 0x50, 0x50, 0x70, 0x70, 0x50, 0x70, 0x70, 0x80, 0x70, 0x70, 0x80}};
-
-    // 0 as Initial
-    //unsigned int offset_data_array[3][16] = {
-    //    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    //    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    //    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
-
-
-    //for (i = 0; i < 100; i++) { 
-    //    SendViaI2C_MLX(CH0, i2c_address, RM, 1, MLX90393Buffer_1, MLX90393Buffer_2, MLX90393Buffer_3, MLX90393Buffer_4, 1);
-    //    Wait(WAIT_value);
-    //    }
-
-    //SendViaI2C_MLX(CH0, i2c_address, RM, 1, MLX90393Buffer_1, MLX90393Buffer_2, MLX90393Buffer_3, MLX90393Buffer_4, 1);
-
-    //if (i2c_address == 0x0C) {
-    //    for (i = 3; i <3; i++) {
-    //        offset_data_array[i][0 + 0] = MLX90393Buffer_1[i*2+1] - target_value[i];
-    //        offset_data_array[i][0 + 1] = MLX90393Buffer_2[i*2+1] - target_value[i];
-    //        offset_data_array[i][0 + 2] = MLX90393Buffer_3[i*2+1] - target_value[i];
-    //        offset_data_array[i][0 + 3] = MLX90393Buffer_4[i*2+1] - target_value[i];
-    //    }
-    //}
-
-    //if (i2c_address == 0x0D) {
-    //    for (i = 3; i <3; i++) {
-    //        offset_data_array[i][4 + 0] = MLX90393Buffer_1[i*2+1] - target_value[i];
-    //        offset_data_array[i][4 + 1] = MLX90393Buffer_2[i*2+1] - target_value[i];
-    //        offset_data_array[i][4 + 2] = MLX90393Buffer_3[i*2+1] - target_value[i];
-    //        offset_data_array[i][4 + 3] = MLX90393Buffer_4[i*2+1] - target_value[i];
-    //    }
-    //}
-
-    //if (i2c_address == 0x0E) {
-    //    for (i = 3; i <3; i++) {
-    //        offset_data_array[i][8 + 0] = MLX90393Buffer_1[i*2+1] - target_value[i];
-    //        offset_data_array[i][8 + 1] = MLX90393Buffer_2[i*2+1] - target_value[i];
-    //        offset_data_array[i][8 + 2] = MLX90393Buffer_3[i*2+1] - target_value[i];
-    //        offset_data_array[i][8 + 3] = MLX90393Buffer_4[i*2+1] - target_value[i];
-    //    }
-    //}
-
-    //if (i2c_address == 0x0F) {
-    //    for (i = 3; i <3; i++) {
-    //        offset_data_array[i][12 + 0] = MLX90393Buffer_1[i*2+1] - target_value[i];
-    //        offset_data_array[i][12 + 1] = MLX90393Buffer_2[i*2+1] - target_value[i];
-    //        offset_data_array[i][12 + 2] = MLX90393Buffer_3[i*2+1] - target_value[i];
-    //        offset_data_array[i][12 + 3] = MLX90393Buffer_4[i*2+1] - target_value[i];
-    //    }
-    //}
-
+    SendViaI2C_MLX(CH0, i2c_address, EX, 1, MLX90393Buffer_1, MLX90393Buffer_2, MLX90393Buffer_3, MLX90393Buffer_4, 1);
     FillCanMessages8bit_hall(CH0, 0);
     Wait(WAIT_value);
 
-    // Write offset
-    offset_data[4] = 0x8000;	 //X
-    offset_data[5] = 0x8000;	 //Y
-    offset_data[6] = 0x5000;	 //Z
-
     // Configure register address 4 - 6
-    for (i = 4; i < 7; i++) {
+    for (i = 0; i < 3; i++) {
         for (j = 0; j < 16; j++) {
 
-            //DataToWrite = offset_data[i];
-            DataToWrite = offset_data_array[i-4][j];
+            DataToWrite = offset_data_array[i][j];
             DataToWrite = DataToWrite << 8 | 0x00;
 
             unsigned int i2c_address_buffer = MLX90393_ADD[j/4];
@@ -626,12 +662,11 @@ void MLX90393_calibration(unsigned char i2c_address) {
             write_buffer[0] = 0x60;
             write_buffer[1] = (DataToWrite & 0xFF00) >> 8;
             write_buffer[2] = DataToWrite & 0x00FF;
-            write_buffer[3] = i << 2;
+            write_buffer[3] = i+4 << 2;
 
             //SendCommandI2C_MLX(CH0, i2c_address, write_buffer, MLX90393Buffer_1, MLX90393Buffer_2, MLX90393Buffer_3, MLX90393Buffer_4, 1);
             SendCommandI2C_MLX_sdax(CH0, i2c_address_buffer, sda_num_buffer, write_buffer, MLX90393Buffer_0, 1);
             FillCanMessages8bit_hall(CH0, 0);
-
         }
     }
 
