@@ -138,7 +138,6 @@ def listener():
        sys.exit(1)
 
 
-
 if __name__== '__main__':
     csv_init()
     listener()
