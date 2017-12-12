@@ -18,13 +18,14 @@ from shutil import copyfile
 # Server Settings
 limitation = True
 record_raw = False
-record_post = False
+record_post = True
 record_base = False
+channel = 'None'       # ROS or visusal or None
 
 # Board Settings
-board_start_num = 1
-num_of_board    = 5
-num_of_tip      = 1
+board_start_num = 4
+num_of_board    = 1
+num_of_tip      = 0
 num_of_axis     = 3
 num_of_taxel    = 16
 
@@ -53,7 +54,7 @@ limit_lower     = 0x0A
 ogasa = '192.168.11.13'
 proxy = '192.168.11.36'
 local = '127.0.0.1'
-TCP_IP = proxy
+TCP_IP = local
 TCP_PORT = 5007
 BUFFER_SIZE = 8192
 
@@ -450,7 +451,8 @@ if __name__ == '__main__':
     #start_sensor_all()
     if record_base == True:
         record_baseline()
-    conn = server_init()
+    if channel == 'ROS' or channel == 'visual':
+        conn = server_init()
     thread.start_new_thread(reset, ())
 
     # Taking first MLX readings
@@ -480,16 +482,18 @@ if __name__ == '__main__':
 
             # Preprocess MLX publish buffer into byte and shift buffer
             byte_array, shift_array = buffer_preprocessor(mlx_publish)
+            print('Shift Array: %s \n' % (shift_array))
 
             # Write processed data to CSV for debugging
             if record_post == True:
                 csv_debug_processed_write(shift_array)
 
-            # Send pickled buffer via TCP for ROS
-            ros_pickle_send(shift_array)
+            # Send buffer via TCP to ROS or visual program
+            if channel == 'ROS':
+                ros_pickle_send(shift_array)
 
-            # Send unpickled buffer via TCP for Visulisation
-            #visualisation_send(byte_buffer)
+            elif channel == 'visual':
+                visualisation_send(byte_buffer)
 
 
     except KeyboardInterrupt:
