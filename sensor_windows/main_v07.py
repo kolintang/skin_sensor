@@ -18,7 +18,7 @@ from shutil import copyfile
 # Server Settings
 limitation = True
 record_raw = False
-record_post = True
+record_post = False
 record_base = False
 channel = 'None'       # ROS or visusal or None
 
