@@ -49,8 +49,13 @@ proxy = '192.168.11.36'
 local = '127.0.0.1'
 TCP_IP = proxy
 TCP_PORT = 5008
-BUFFER_SIZE = 8192
 
+# CAN connection configurations
+net  = 2        # Logical CAN Network [0, 255]
+RxQS = 1        # RxQueueSize [0, 10000]
+RxTO = 2000     # RxTimeOut in Millisconds
+TxQS = 1        # TxQueueSize [0, 10000]
+TxTO = 1000     # TxTimeOut in Millseconds
 
 
 ##########################
@@ -138,11 +143,6 @@ def ntcan_init():
 
     # cif = ntcan.CIF( net, RxQueueSize, RxTimeOut, TxQueueSize, TxTimeOut, Flags)
     # RxQS, TxQS = 1 for real time application
-    net  = 2        # Logical CAN Network [0, 255]
-    RxQS = 1        # RxQueueSize [0, 10000]
-    RxTO = 2000     # RxTimeOut in Millisconds
-    TxQS = 1        # TxQueueSize [0, 10000]
-    TxTO = 1000     # TxTimeOut in Millseconds
 
     # Initialise cif using a loop
     for j in range(board_start_num, board_start_num + num_of_board):
@@ -465,7 +465,6 @@ if __name__ == '__main__':
 
             # Send pickled buffer via TCP for ROS
             ros_pickle_send(shift_array)
-            time.sleep(0.0001)
 
             # Send unpickled buffer via TCP for Visulisation
             #visualisation_send(byte_buffer)
