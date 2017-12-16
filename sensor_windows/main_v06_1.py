@@ -465,6 +465,7 @@ if __name__ == '__main__':
 
             # Send pickled buffer via TCP for ROS
             ros_pickle_send(shift_array)
+            time.sleep(0.0001)
 
             # Send unpickled buffer via TCP for Visulisation
             #visualisation_send(byte_buffer)
