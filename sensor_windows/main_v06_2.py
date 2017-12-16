@@ -195,7 +195,7 @@ def read_sensor(start_no, end_no, taxel_no):
                 cmsg_array[j,k].canRead(cif_array[j, k])
 
     except IOError, (errno):
-        print "I/O error(%s): " % (errno)
+        print "I/O Error (%s): %s " % (errno, j)
 
 
 # Start burst 16 taxel board (only work with 1 board)
@@ -210,7 +210,7 @@ def start_sensor_all():
                 cmsg_array[j, 0].canWriteByte(cif_array[j, 0], (id_base | j), 2, 7, 0)
 
     except IOError, (errno):
-        print "I/O error(%s): " % (errno)
+        print "I/O Error (%s): %s " % (errno, j)
 
 
 # Read 16 taxel board (with canWriteByte activated reading is limited to 60 hz)
@@ -230,7 +230,7 @@ def read_sensor_all():
                     cmsg_array[j,k].canRead(cif_array[j, k])
 
     except IOError, (errno):
-        print "I/O error(%s): " % (errno)
+        print "I/O Error (%s): %s " % (errno, j)
 
 
 # Transfer all stored CAN message reading into MLX buffer
