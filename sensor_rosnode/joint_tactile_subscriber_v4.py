@@ -5,7 +5,7 @@ from std_msgs.msg import String, Int32, Int32MultiArray
 
 
 # Initialise csv path and dataset name
-object_name = 'test'
+object_name = 'pencilcase'
 trial_number = '00'
 csv_name = '../datasets/' + object_name + '_' + trial_number + '.csv'
 
@@ -39,7 +39,12 @@ def csv_init():
         for l in range (4):
             csv_header.append('F'+str(k)+'J'+str(l))
 
-    # Initialising CSV header
+    # Check existing CSV, and name a new one
+    #trial_number = 00
+    #while os.path.exists("%s_%s.csv" % (object_name, trial_number)):
+    #        trial_number += 1
+
+    # Create CSV and add header row
     with open(csv_name, 'w') as csvfile:
         writer = csv.writer(csvfile, lineterminator='\n')
         writer.writerow(csv_header)
@@ -126,12 +131,12 @@ def listener():
         while True:
             global node_state
             if node_state == 1:
-                #print('%s: Writing to CSV..' % (datetime.datetime.now()))
+                print('%s: Writing to CSV..' % (datetime.datetime.now()))
                 write_csv()
 
             else:
                 pass
-                #print('%s: Waiting for record commands..' % (datetime.datetime.now()))
+                print('%s: Waiting for record commands..' % (datetime.datetime.now()))
 
     except KeyboardInterrupt:
        print('Stop')
