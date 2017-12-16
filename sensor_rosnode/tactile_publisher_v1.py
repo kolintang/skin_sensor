@@ -24,10 +24,14 @@ def publisher():
     while True:
         global tactile_list_v1
         data_v1 = s.recv(BUFFER_SIZE)
-        if not data_v1: break
-        tactile_list_v1.data = pickle.loads(data_v1)
-        #print ("%s \n" % (tactile_list_v1))
-        pub.publish(tactile_list_v1)
+
+        if not data_v1:
+            break
+
+        elif data_v1:
+            tactile_list_v1.data = pickle.loads(data_v1)
+            #print ("%s \n" % (tactile_list_v1))
+            pub.publish(tactile_list_v1)
 
 
 if __name__== '__main__':

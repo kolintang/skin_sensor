@@ -7,7 +7,7 @@ from std_msgs.msg import String, Int32MultiArray
 # Setup TCP server
 TCP_IP = '192.168.11.36'
 TCP_PORT = 5008
-BUFFER_SIZE = 8192
+BUFFER_SIZE = 4096
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
@@ -24,10 +24,14 @@ def publisher():
     while True:
         global tactile_list_v2
         data_v2 = s.recv(BUFFER_SIZE)
-        if not data_v2: break
-        tactile_list_v2.data = pickle.loads(data_v2)
-        #print ("%s \n" % (tactile_list_v2))
-        pub.publish(tactile_list_v2)
+
+        if not data_v2:
+            break
+
+        elif data_v2:
+            tactile_list_v2.data = pickle.loads(data_v2)
+            #print ("%s \n" % (tactile_list_v2))
+            pub.publish(tactile_list_v2)
 
 
 if __name__== '__main__':
