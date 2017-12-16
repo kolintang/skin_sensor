@@ -5,14 +5,14 @@ from std_msgs.msg import String, Int32, Int32MultiArray
 
 
 # Initialise csv path and dataset name
-object_name = 'pencilcase'
+object_name = 'test'
 trial_number = '00'
 csv_name = '../datasets/' + object_name + '_' + trial_number + '.csv'
 
 
 # Initialise lists
 node_state = 0
-finger_number = 1
+finger_number = 2
 patch_number = 5
 taxel_number = 16
 csv_header = []
@@ -121,9 +121,7 @@ def listener():
     rospy.Subscriber('allegroHand/node_states', Int32, callback_node_state)
     rospy.Subscriber('allegroHand_0/joint_states', JointState, callback_joint)
     rospy.Subscriber('tactile_reading_finger_1', Int32MultiArray, callback_tactile_1)
-    #rospy.Subscriber('tactile_reading_finger_2', Int32MultiArray, callback_tactile_2)
-    #rospy.Subscriber('tactile_reading_finger_3', Int32MultiArray, callback_tactile_3)
-    #rospy.Subscriber('tactile_reading_finger_4', Int32MultiArray, callback_tactile_4)
+    rospy.Subscriber('tactile_reading_finger_2', Int32MultiArray, callback_tactile_2)
     time.sleep(0.1)
     print('ROS subscriber setup!')
 
