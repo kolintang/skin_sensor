@@ -12,8 +12,8 @@ csv_name = '../datasets/' + object_name + '_' + trial_number + '.csv'
 
 # Initialise lists
 node_state = 0
-finger_number = 2
-patch_number = 5
+finger_number = 1
+patch_number = 13
 taxel_number = 16
 csv_header = []
 tactile_list_1 = [None]*48*patch_number
@@ -21,7 +21,7 @@ tactile_list_2 = [None]*48*patch_number
 tactile_list_3 = [None]*48*patch_number
 tactile_list_4 = [None]*48*patch_number
 joint_list = [None]*16*patch_number
-JT_List = [None]*64*patch_number
+combined = [None]*64*patch_number
 
 
 def csv_init():
@@ -88,30 +88,35 @@ def write_csv():
     global tactile_list_3
     global tactile_list_4
 
-    if None in tactile_list_1 or None in joint_list:
-    #None in tactile_list_2 or
-    #None in tactile_list_3 or
-    #None in tactile_list_4 or
+    if None in tactile_list_1 or \
+       None in tactile_list_2 or \
+       None in joint_list:
+
+       #None in tactile_list_3 or
+       #None in tactile_list_4 or
+
         pass
 
     else:
         #print('Fully updated.. publishing\n')
-        JT_List = list(tactile_list_1) + list(joint_list)
-                  #list(tactile_list_2) +
-                  #list(tactile_list_3) +
-                  #list(tactile_list_4) +
+        combined = list(tactile_list_1) + \
+                   list(tactile_list_2) + \
+                   list(joint_list)
+
+                   #list(tactile_list_3) + \
+                   #list(tactile_list_4) + \
 
         # Write to CSV at once
         with open(csv_name, 'a') as csvfile:
             writer = csv.writer(csvfile, lineterminator='\n')
-            writer.writerow(JT_List)
+            writer.writerow(combined)
 
         # Reinitialising Buffer
+        joint_list = [None]*16*patch_number
         tactile_list_1 = [None]*48*patch_number
-        #tactile_list_2 = [None]*48*patch_number
+        tactile_list_2 = [None]*48*patch_number
         #tactile_list_3 = [None]*48*patch_number
         #tactile_list_4 = [None]*48*patch_number
-        joint_list = [None]*16*patch_number
 
 
 def listener():
@@ -122,6 +127,8 @@ def listener():
     rospy.Subscriber('allegroHand_0/joint_states', JointState, callback_joint)
     rospy.Subscriber('tactile_reading_finger_1', Int32MultiArray, callback_tactile_1)
     rospy.Subscriber('tactile_reading_finger_2', Int32MultiArray, callback_tactile_2)
+    #rospy.Subscriber('tactile_reading_finger_3', Int32MultiArray, callback_tactile_3)
+    #rospy.Subscriber('tactile_reading_finger_4', Int32MultiArray, callback_tactile_4)
     time.sleep(0.1)
     print('ROS subscriber setup!')
 
