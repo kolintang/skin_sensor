@@ -5,9 +5,10 @@
 
 import sys, os, time, types, csv, string, thread
 import getopt, util, thread, threading, numpy
-import pickle, socket, canopen, ntcan, ipdb
+import pickle, socket, canopen, ntcan, ipdb, struct
 from copy import deepcopy
 from shutil import copyfile
+from multiprocessing.connection import Listener, Client
 
 
 
@@ -222,7 +223,7 @@ def read_sensor_all():
             for k in range (0, num_of_taxel):
                 cmsg_array[j,k].canRead(cif_array[j, k])
 
-        time.sleep(0.005)
+        time.sleep(0.008)
         if num_of_tip == 1:
             for j in range (5, 6):
                 cmsg_array[j, 0].canWriteByte(cif_array[j, 0], (id_base | j), 2, 7, 0)
@@ -331,12 +332,15 @@ def server_init():
     #raw_input('\nPress Enter to start TCP/IP server...')
 
     # Start TCP server & wait for connection
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((TCP_IP, TCP_PORT))
-    s.listen(1)
+    #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #s.bind((TCP_IP, TCP_PORT))
+    #s.listen(1)
+
+    server = Listener((TCP_IP, TCP_PORT))
     print('Server started, waiting for client conection...')
 
-    conn, addr = s.accept()
+    #conn, addr = s.accept()
+    conn = server.accept()
     print('Client accepted!')
     print('Press ctrl + c to stop')
 
@@ -405,8 +409,9 @@ def reset():
 # Send pickled buffer via TCP for ROS
 def ros_pickle_send(buffer_in):
 
-    pickle_array = pickle.dumps(buffer_in)
-    conn.sendall(pickle_array)
+    #pickle_array = pickle.dumps(buffer_in)
+    #conn.sendall(pickle_array)
+    conn.send(buffer_in)
 
 
 # Send unpickled buffer via TCP for Visulisation
@@ -432,7 +437,7 @@ if __name__ == '__main__':
     #start_sensor_all()
     #record_baseline()
     conn = server_init()
-    thread.start_new_thread(reset, ())
+    #thread.start_new_thread(reset, ())
 
     # Taking first MLX readings
     read_sensor_all()
