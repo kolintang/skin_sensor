@@ -26,6 +26,7 @@ def publisher():
         data_v1 = s.recv(BUFFER_SIZE)
 
         if not data_v1:
+            time.sleep(0.001)
             break
 
         elif data_v1:
