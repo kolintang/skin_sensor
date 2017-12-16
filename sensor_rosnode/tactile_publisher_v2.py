@@ -6,13 +6,13 @@ from std_msgs.msg import String, Int32MultiArray
 
 # Setup TCP server
 TCP_IP = '192.168.11.36'
-TCP_PORT = 5007
+TCP_PORT = 5008
 BUFFER_SIZE = 8192
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 # Initialise lists
-patch_number = 6
+patch_number = 7
 taxel_number = 16
 tactile_list = Int32MultiArray()
 
@@ -33,8 +33,8 @@ def publisher():
 if __name__== '__main__':
 
     try:
-        pub = rospy.Publisher('tactile_reading_finger_1', Int32MultiArray, queue_size=10)
-        rospy.init_node('tactile_reading_finger_1', anonymous=True)
+        pub = rospy.Publisher('tactile_reading_finger_2', Int32MultiArray, queue_size=10)
+        rospy.init_node('tactile_reading_finger_2', anonymous=True)
         time.sleep(0.1)
 
         print('Connecting to server..')
