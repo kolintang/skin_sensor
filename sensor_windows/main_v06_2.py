@@ -1,5 +1,5 @@
 # Title : uSkin Server
-# Date  : 2017/11/24
+# Date  : 2017/11/23
 # Author: Shu
 
 
@@ -14,13 +14,6 @@ from shutil import copyfile
 ###########################
 ## Globle Configurations ##
 ###########################
-
-# Server Settings
-limitation = True
-record_raw = False
-record_post = False
-record_base = True
-channel = 'none'       # ROS or visual
 
 # Board Settings
 board_start_num = 1
@@ -50,27 +43,19 @@ limit_threshold = 0xA0
 limit_upper     = 0xFA
 limit_lower     = 0x0A
 
-# Setup TCP server 
+# Setup TCP server
 ogasa = '192.168.11.13'
 proxy = '192.168.11.36'
 local = '127.0.0.1'
-TCP_IP = local
-TCP_PORT = 5007
+TCP_IP = proxy
+TCP_PORT = 5008
 BUFFER_SIZE = 8192
-
-# CAN connection configurations
-net  = 2        # Logical CAN Network [0, 255]
-RxQS = 1        # RxQueueSize [0, 10000]
-RxTO = 2000     # RxTimeOut in Millisconds
-TxQS = 1        # TxQueueSize [0, 10000]
-TxTO = 1000     # TxTimeOut in Millseconds
 
 
 
 ##########################
 ## Function Definitions ##
 ##########################
-
 
 # Remove previous CSV log files
 def csv_log_init():
@@ -79,8 +64,8 @@ def csv_log_init():
     for i in range(num_of_board):
         del_num = board_start_num + i
 
-        if os.path.exists('visualization/LOG%s.csv' % del_num):
-            os.remove('visualization/LOG%s.csv' % del_num)
+        if os.path.exists('LOG%s.csv' % del_num):
+            os.remove('LOG%s.csv' % del_num)
 
 
 # Create sensor debug logs and its header row
@@ -153,6 +138,11 @@ def ntcan_init():
 
     # cif = ntcan.CIF( net, RxQueueSize, RxTimeOut, TxQueueSize, TxTimeOut, Flags)
     # RxQS, TxQS = 1 for real time application
+    net  = 2        # Logical CAN Network [0, 255]
+    RxQS = 1        # RxQueueSize [0, 10000]
+    RxTO = 2000     # RxTimeOut in Millisconds
+    TxQS = 1        # TxQueueSize [0, 10000]
+    TxTO = 1000     # TxTimeOut in Millseconds
 
     # Initialise cif using a loop
     for j in range(board_start_num, board_start_num + num_of_board):
@@ -172,7 +162,7 @@ def ntcan_init():
     print('\nSetting up ESD-CAN...')
     print(cif_array[board_start_num, 0])
     print(('Cmsg: %s') % (cmsg_array[board_start_num, 0]))
-    print(('Cmsg lost: %d \n') % (cmsg_array[board_start_num, 0].msg_lost))
+    print(('Cmsg lost: %d') % (cmsg_array[board_start_num, 0].msg_lost))
 
 
 # Generate CAN address
@@ -192,11 +182,6 @@ def can_init():
         for k in range(0, num_of_taxel):
             cif_array[j, k].canIdAdd(can_addr[j - board_start_num][k])
 
-    print('Board start no. = %d ' % (board_start_num))
-    print('Number of board = %d ' % (num_of_board))
-    print('Number of tip   = %d ' % (num_of_tip))
-    print('Number of axis  = %d ' % (num_of_axis))
-    print('Number of taxel = %d ' % (num_of_taxel))
     print('Setup is completed\n')
 
 
@@ -210,7 +195,7 @@ def read_sensor(start_no, end_no, taxel_no):
                 cmsg_array[j,k].canRead(cif_array[j, k])
 
     except IOError, (errno):
-        print "I/O Error (%s): %s " % (errno, j)
+        print "I/O error(%s): " % (errno)
 
 
 # Start burst 16 taxel board (only work with 1 board)
@@ -225,20 +210,19 @@ def start_sensor_all():
                 cmsg_array[j, 0].canWriteByte(cif_array[j, 0], (id_base | j), 2, 7, 0)
 
     except IOError, (errno):
-        print "I/O Error (%s): %s" % (errno, j)
+        print "I/O error(%s): " % (errno)
 
 
 # Read 16 taxel board (with canWriteByte activated reading is limited to 60 hz)
 def read_sensor_all():
 
     try:
-        time.sleep(0.007)
         for j in range (board_start_num, board_start_num + num_of_board - num_of_tip):
             cmsg_array[j, 0].canWriteByte(cif_array[j, 0], (id_base | j), 2, 7, 0)
             for k in range (0, num_of_taxel):
                 cmsg_array[j,k].canRead(cif_array[j, k])
 
-        time.sleep(0.007)
+        time.sleep(0.005)
         if num_of_tip == 1:
             for j in range (5, 6):
                 cmsg_array[j, 0].canWriteByte(cif_array[j, 0], (id_base | j), 2, 7, 0)
@@ -246,7 +230,7 @@ def read_sensor_all():
                     cmsg_array[j,k].canRead(cif_array[j, k])
 
     except IOError, (errno):
-        print "I/O Error (%s): %s" % (errno, j)
+        print "I/O error(%s): " % (errno)
 
 
 # Transfer all stored CAN message reading into MLX buffer
@@ -312,6 +296,7 @@ def bit_shift_all(buffer_in):
 def record_baseline():
 
     print('Triggering sensor...')
+
     # Trigger first 100 readings to avoid 0xFF initalization reading
     for i in range (0, 100):
         read_sensor_all()
@@ -336,17 +321,9 @@ def record_baseline():
 
         csvfile.close()
 
-    if (board_start_num == 1 and num_of_board == 1):
-        copyfile('visualization/LOG1.csv', 'visualization/LOG2.csv')
-
-    if (board_start_num == 2 and num_of_board == 1):
-        copyfile('visualization/LOG2.csv', 'visualization/LOG1.csv')
-
-    if (board_start_num == 3 and num_of_board == 1):
-        copyfile('visualization/LOG3.csv', 'visualization/LOG1.csv')
-        copyfile('visualization/LOG3.csv', 'visualization/LOG2.csv')
-
-    print('\nFinished')
+    #copyfile('visualization/LOG3.csv', 'visualization/LOG1.csv')
+    #copyfile('visualization/LOG1.csv', 'visualization/LOG2.csv')
+    print('\nFin#ished')
 
 
 def server_init():
@@ -382,7 +359,7 @@ def limitation_handler(previous_buffer, current_buffer, publish_buffer):
                 elif difference[i] <= limit_threshold * (-1):
                     tracking[j][k][i] -= 1
 
-            # Limit the MXL buffer depending on tracking record
+                # Limit the MXL buffer depending on tracking record
                 if tracking[j][k][i] > 0:
                     publish_buffer[j, k][i*2+1] = limit_upper
                 elif tracking[j][k][i] < 0:
@@ -453,9 +430,8 @@ if __name__ == '__main__':
     can_init()
 
     #start_sensor_all()
-    if record_base == True:
-        record_baseline()
-    #conn = server_init()
+    #record_baseline()
+    conn = server_init()
     thread.start_new_thread(reset, ())
 
     # Taking first MLX readings
@@ -475,27 +451,23 @@ if __name__ == '__main__':
             mlx_publish = deepcopy(mlx_buffer)
 
             # Write raw data to CSV for debugging
-            if record_raw == True:
-                byte_array, shift_array = buffer_preprocessor(mlx_buffer)
-                csv_debug_raw_write(shift_array)
+            #byte_array, shift_array = buffer_preprocessor(mlx_buffer)
+            #csv_debug_raw_write(shift_array)
 
             # Calculate difference between previous and current step reading
-            if limitation == True:
-                mlx_publish = limitation_handler(mlx_previous, mlx_buffer, mlx_publish)
+            mlx_publish = limitation_handler(mlx_previous, mlx_buffer, mlx_publish)
 
             # Preprocess MLX publish buffer into byte and shift buffer
             byte_array, shift_array = buffer_preprocessor(mlx_publish)
 
             # Write processed data to CSV for debugging
-            if record_post == True:
-                csv_debug_processed_write(shift_array)
+            #csv_debug_processed_write(shift_array)
 
-            # Send buffer via TCP to ROS or visual program
-            if channel == 'ROS':
-                ros_pickle_send(shift_array)
+            # Send pickled buffer via TCP for ROS
+            ros_pickle_send(shift_array)
 
-            elif channel == 'visual':
-                visualisation_send(byte_buffer)
+            # Send unpickled buffer via TCP for Visulisation
+            #visualisation_send(byte_buffer)
 
 
     except KeyboardInterrupt:
