@@ -7,14 +7,14 @@ from std_msgs.msg import String, Int32MultiArray
 # Setup TCP server
 TCP_IP = '192.168.11.36'
 TCP_PORT = 5007
-BUFFER_SIZE = 8192
+BUFFER_SIZE = 4096
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 # Initialise lists
 patch_number = 6
 taxel_number = 16
-tactile_list = Int32MultiArray()
+tactile_list_v1 = Int32MultiArray()
 
 
 def publisher():
@@ -22,12 +22,12 @@ def publisher():
     print('Publishing ROS topic!')
 
     while True:
-        global tactile_list
+        global tactile_list_v1
         data_v1 = s.recv(BUFFER_SIZE)
         if not data_v1: break
-        tactile_list.data = pickle.loads(data_v1)
-        #print ("%s \n" % (tactile_list))
-        pub.publish(tactile_list)
+        tactile_list_v1.data = pickle.loads(data_v1)
+        #print ("%s \n" % (tactile_list_v1))
+        pub.publish(tactile_list_v1)
 
 
 if __name__== '__main__':

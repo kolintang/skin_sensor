@@ -14,7 +14,7 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # Initialise lists
 patch_number = 7
 taxel_number = 16
-tactile_list = Int32MultiArray()
+tactile_list_v2 = Int32MultiArray()
 
 
 def publisher():
@@ -22,12 +22,12 @@ def publisher():
     print('Publishing ROS topic!')
 
     while True:
-        global tactile_list
+        global tactile_list_v2
         data_v2 = s.recv(BUFFER_SIZE)
         if not data_v2: break
-        tactile_list.data = pickle.loads(data_v2)
-        #print ("%s \n" % (tactile_list))
-        pub.publish(tactile_list)
+        tactile_list_v2.data = pickle.loads(data_v2)
+        #print ("%s \n" % (tactile_list_v2))
+        pub.publish(tactile_list_v2)
 
 
 if __name__== '__main__':
