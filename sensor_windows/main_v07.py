@@ -3,7 +3,7 @@
 # Author: Shu
 
 
-import sys, os, time, types, csv, string, thread
+import sys, os, time, types, csv, string
 import getopt, util, thread, threading, numpy
 import pickle, socket, canopen, ntcan, ipdb
 from copy import deepcopy

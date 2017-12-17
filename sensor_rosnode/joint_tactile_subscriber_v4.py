@@ -1,13 +1,14 @@
 #!/usr/bin/env python
-import rospy, csv, time, socket, pickle, numpy, datetime
+import rospy, csv, pickle, numpy
+import os, sys, time, datetime, thread, socket
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String, Int32, Int32MultiArray
 
 
 # Initialise csv path and dataset name
 object_name = 'bottlesmallkirin'
-trial_number = '00'
-csv_name = '../datasets/' + object_name + '_' + trial_number + '.csv'
+trial_number = 7
+csv_name = '../datasets/' + object_name + '_' + str('%02d' % trial_number) + '.csv'
 
 
 # Initialise lists
@@ -39,15 +40,30 @@ def csv_init():
         for l in range (4):
             csv_header.append('F'+str(k)+'J'+str(l))
 
-    # Check existing CSV, and name a new one
-    #trial_number = 00
-    #while os.path.exists("%s_%s.csv" % (object_name, trial_number)):
-    #        trial_number += 1
-
-    # Create CSV and add header row
+    # Create first CSV and add header row
     with open(csv_name, 'w') as csvfile:
         writer = csv.writer(csvfile, lineterminator='\n')
         writer.writerow(csv_header)
+
+    print('Ready to write to file: %02d' % trial_number)
+
+    while True:
+
+        global trial_number
+        global csv_name
+        input('Press entre to create next CSV file')
+
+        # Check existing CSV, and name a new one
+        if os.path.exists(csv_name):
+            trial_number += 1
+            csv_name = '../datasets/' + object_name + '_' + str('%02d' % trial_number) + '.csv'
+
+            # Create CSV and add header row
+            with open(csv_name, 'w') as csvfile:
+                writer = csv.writer(csvfile, lineterminator='\n')
+                writer.writerow(csv_header)
+
+        print('\nReady to write to file: %02d' % trial_number)
 
 
 def callback_node_state(state):
@@ -136,6 +152,8 @@ def listener():
     time.sleep(0.1)
     print('ROS subscriber setup!\n')
 
+    thread.start_new_thread(csv_init, ())
+
     try:
         while not rospy.is_shutdown():
             global node_state
@@ -153,5 +171,4 @@ def listener():
 
 
 if __name__== '__main__':
-    csv_init()
     listener()
