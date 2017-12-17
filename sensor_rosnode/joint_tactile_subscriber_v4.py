@@ -6,14 +6,14 @@ from std_msgs.msg import String, Int32, Int32MultiArray
 
 
 # Initialise csv path and dataset name
-object_name = 'bottlesmallkirin'
-trial_number = 7
+object_name = 'baseball'
+trial_number = 24
 csv_name = '../datasets/' + object_name + '_' + str('%02d' % trial_number) + '.csv'
 
 
 # Initialise lists
 node_state = 0
-finger_number = 1
+finger_number = 4
 patch_number = 13
 taxel_number = 16
 csv_header = []
