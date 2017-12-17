@@ -21,7 +21,7 @@ def publisher():
 
     print('Publishing ROS topic!')
 
-    while True:
+    while not rospy.is_shutdown():
 
         global tactile_list_v1
         #data_v1 = s.recv(BUFFER_SIZE)
@@ -39,7 +39,7 @@ def publisher():
 if __name__== '__main__':
 
     try:
-        pub = rospy.Publisher('tactile_reading_finger_1', Int32MultiArray, queue_size=10)
+        pub = rospy.Publisher('tactile_reading_finger_1', Int32MultiArray, queue_size=1)
         rospy.init_node('tactile_reading_finger_1', anonymous=True)
         time.sleep(0.1)
 

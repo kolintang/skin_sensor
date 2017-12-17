@@ -5,7 +5,7 @@ from std_msgs.msg import String, Int32, Int32MultiArray
 
 
 # Initialise csv path and dataset name
-object_name = 'test'
+object_name = 'bottlesmallkirin'
 trial_number = '00'
 csv_name = '../datasets/' + object_name + '_' + trial_number + '.csv'
 
@@ -121,7 +121,11 @@ def write_csv():
 
 def listener():
 
-    print('Setting up ROS subscriber node..')
+    print('\nObject Name: %s' % (object_name))
+    print('Trial Number: %s' % (trial_number))
+    print('Patch Number: %s' % (patch_number))
+
+    print('\nSetting up ROS subscriber node..')
     rospy.init_node('joint_tactile_subscriber', anonymous=True)
     rospy.Subscriber('allegroHand/node_states', Int32, callback_node_state)
     rospy.Subscriber('allegroHand_0/joint_states', JointState, callback_joint)
@@ -130,18 +134,18 @@ def listener():
     #rospy.Subscriber('tactile_reading_finger_3', Int32MultiArray, callback_tactile_3)
     #rospy.Subscriber('tactile_reading_finger_4', Int32MultiArray, callback_tactile_4)
     time.sleep(0.1)
-    print('ROS subscriber setup!')
+    print('ROS subscriber setup!\n')
 
     try:
-        while True:
+        while not rospy.is_shutdown():
             global node_state
             if node_state == 1:
-                print('%s: Writing to CSV..' % (datetime.datetime.now()))
+                #print('%s: Writing to CSV..' % (datetime.datetime.now()))
                 write_csv()
 
             else:
                 pass
-                print('%s: Waiting for record commands..' % (datetime.datetime.now()))
+                #print('%s: Waiting for record commands..' % (datetime.datetime.now()))
 
     except KeyboardInterrupt:
        print('Stop')
