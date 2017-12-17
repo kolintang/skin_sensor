@@ -23,8 +23,8 @@ record_base = True
 channel = 'none'       # ROS or visual
 
 # Board Settings
-board_start_num = 1
-num_of_board    = 7
+board_start_num = 4
+num_of_board    = 1
 num_of_tip      = 0
 num_of_axis     = 3
 num_of_taxel    = 16
@@ -59,7 +59,7 @@ TCP_PORT = 5007
 BUFFER_SIZE = 8192
 
 # CAN connection configurations
-net  = 2        # Logical CAN Network [0, 255]
+net  = 0        # Logical CAN Network [0, 255]
 RxQS = 1        # RxQueueSize [0, 10000]
 RxTO = 2000     # RxTimeOut in Millisconds
 TxQS = 1        # TxQueueSize [0, 10000]
