@@ -7,7 +7,7 @@ from std_msgs.msg import String, Int32, Int32MultiArray
 
 # Initialise csv path and dataset name
 object_name = 'baseball'
-trial_number = 24
+trial_number = 17
 csv_name = '../datasets/' + object_name + '_' + str('%02d' % trial_number) + '.csv'
 
 
